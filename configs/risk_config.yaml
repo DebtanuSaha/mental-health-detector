@@ -1,0 +1,87 @@
+# Risk scoring configuration.
+#
+# IMPORTANT: thresholds and weights below are REASONABLE STARTING POINTS,
+# not validated cutoffs. The brief (§6) is explicit that operational
+# thresholds require real-world validation before any real deployment —
+# don't treat these numbers as settled just because they're in a config
+# file instead of hard-coded in Python.
+
+# risk_score is a weighted combination of the crisis and distress model
+# probabilities (see signal_weights below), then mapped to a category
+# using these cutoffs. score >= critical -> CRITICAL, >= high -> HIGH,
+# >= moderate -> MODERATE, else LOW.
+#
+# Chosen so a strong CRISIS signal alone can reach CRITICAL even with
+# near-zero distress-model agreement (max possible contribution from
+# crisis alone is signal_weights.crisis = 0.65) — a maximally confident
+# suicide-indicator signal shouldn't require distress-model agreement to
+# register as critical, since crisis is the more direct signal. E.g.
+# crisis=0.98, distress=0.10 -> score=0.672 -> CRITICAL under these cutoffs.
+thresholds:
+  moderate: 0.30
+  high: 0.50
+  critical: 0.62
+
+# How much each real trained model's probability contributes to the
+# combined risk_score. Crisis (Komati-trained, suicide-indicator) is
+# weighted higher than distress (Dreaddit-trained, general emotional
+# distress) since it's the more direct signal for this system's purpose.
+# These do not need to sum to exactly 1.0 but are designed to.
+signal_weights:
+  crisis: 0.65
+  distress: 0.35
+
+# Separate from the overall risk thresholds above: the per-signal cutoff
+# used only to decide whether to list "suicide_indicator" /
+# "emotional_distress" in detected_categories. Kept as its own value
+# (not reusing the risk thresholds) since "is this category present at
+# all" and "how severe is the combined risk" are different questions.
+category_detection_threshold: 0.5
+
+# Sentiment is deliberately NOT part of signal_weights / risk_score —
+# per brief §7 it's a secondary, informational signal only, reported
+# alongside the risk assessment but never fused into the numeric score
+# or the risk_level decision. See ml/risk/risk_scoring.py.
+sentiment:
+  model_name: "cardiffnlp/twitter-roberta-base-sentiment-latest"
+
+# sentiment:
+#   model_name: "D:/mental-health-text-detector/models/sentiment/roberta_sentiment"
+
+# Where to find each signal's trained model. roberta_dir is tried first
+# (Phase 3); if that checkpoint doesn't exist yet, ml/inference/model_predictor.py
+# falls back to baseline_path (Phase 2) automatically, with a logged
+# warning — never silently.
+model_paths:
+  crisis:
+    roberta_dir: "models/roberta/komati"
+    baseline_path: "models/baseline/komati_baseline_pipeline.joblib"
+  distress:
+    roberta_dir: "models/roberta/dreaddit"
+    baseline_path: "models/baseline/dreaddit_baseline_pipeline.joblib"
+
+# Safety behavior per risk level (brief §18). Messages use only the
+# brief's approved, non-diagnostic phrasing. Actual verified crisis
+# resources (phone numbers, URLs — sourced in Phase 0) are retrieved
+# and attached in Phase 6, not here; `resources` stays an empty list at
+# this phase, populated later based on risk_level.
+safety_messages:
+  LOW:
+    type: "general_wellbeing"
+    message: "No strong distress or crisis-related signals were detected. General wellbeing information and self-care resources may still be of interest."
+  MODERATE:
+    type: "encourage_support"
+    message: "Some distress-related signals were detected. Consider talking to a trusted person or a mental-health professional about how you're feeling."
+  HIGH:
+    type: "professional_support"
+    message: "Elevated crisis-related signals were detected. Consider reaching out to a qualified mental-health professional for support."
+  CRITICAL:
+    type: "immediate_help"
+    message: "High-risk linguistic indicators were detected. If you or someone else may be in immediate danger, please reach out to a local emergency or crisis service as soon as possible."
+
+disclaimer: "This is an AI-based screening tool and not a clinical diagnosis. Predictions are probabilistic estimates and should not replace qualified human assessment."
+
+# Path to the verified, hand-sourced crisis resource database (Phase 0/6).
+# Never generated or edited by the model at runtime — see
+# ml/resources/resource_loader.py.
+resources_path: "resources/verified_resources.json"

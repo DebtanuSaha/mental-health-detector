@@ -1,0 +1,25 @@
+# Phase 1 — dataset exploration
+pandas>=2.0
+PyYAML>=6.0
+pytest>=7.4
+
+# Phase 2 — TF-IDF + Logistic Regression baseline
+scikit-learn>=1.3
+joblib>=1.3
+numpy>=1.24
+
+# Phase 3 — RoBERTa fine-tuning
+# Pinned to a fairly recent floor: TrainingArguments' API has shifted
+# across major transformers versions (e.g. warmup_ratio moved/renamed
+# in some releases) — this project computes warmup_steps manually
+# instead of passing warmup_ratio directly, specifically to stay
+# compatible across that kind of change, but a very old transformers
+# (<4.30) is untested here.
+torch>=2.0
+transformers>=4.30
+datasets>=2.14
+accelerate>=1.1.0
+tokenizers>=0.15
+captum
+
+# Later phases will extend this file with fastapi, etc.

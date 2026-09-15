@@ -1,0 +1,103 @@
+# Training configuration.
+# Phase 2 (baseline) uses the `baseline` and `split` sections below.
+# A `roberta` section will be added in Phase 3 without touching this one.
+
+split:
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  random_seed: 42
+  # Neither Komati nor Dreaddit exposes a user/author ID column in the
+  # public CSV schema (Dreaddit has post_id, not a user id), so
+  # group-based splitting by user isn't possible with the data as
+  # distributed. Falling back to stratified random splitting by label.
+  # If a future dataset DOES expose user IDs, set this true and add a
+  # `group_column` — the splitter supports it, just unused today.
+  group_based: false
+  group_column: null
+
+preprocessing:
+  lowercase: false          # keep capitalization — can carry signal (e.g. shouting)
+  normalize_unicode: true   # NFKC normalization
+  normalize_whitespace: true
+  replace_urls: true        # URLs replaced with a <URL> token (content, not signal)
+  replace_mentions: false   # keep @mentions as-is for now — untested whether removing helps
+  strip_emojis: false       # keep emojis — can carry emotional signal
+  # Real Phase 1 run found 21 duplicate-text rows in Dreaddit (0 in
+  # Komati). Dropped before splitting to prevent the same text landing
+  # in both train and test under the random (non-group) split — see
+  # ml/training/train_baseline.py.
+  drop_duplicate_text: true
+
+baseline:
+  dataset: "komati"          # "komati" or "dreaddit" — which to train/evaluate on
+  tfidf:
+    # Real Komati corpus is 232K docs — min_df=2 on that scale lets in
+    # a lot of one-off typos/rare tokens as noise. Raised to 5. Vocab
+    # cap raised from 20K to 40K to compensate (bigrams eat vocabulary
+    # fast on a corpus this size) — both are starting points for the
+    # Phase 2 hyperparameter pass, not final.
+    max_features: 40000
+    ngram_range: [1, 2]
+    min_df: 5
+    max_df: 0.95
+    sublinear_tf: true
+  logistic_regression:
+    C: 1.0
+    max_iter: 1000
+    # Confirmed via real Phase 1 run: Komati is exactly 50.0/50.0 —
+    # class_weight="balanced" is a no-op there (kept for Dreaddit's
+    # mild 52/48 split and as a safe default if a future dataset is
+    # swapped in without re-checking balance first).
+    class_weight: "balanced"
+    solver: "liblinear"
+  output_dir: "models/baseline"
+
+class_imbalance:
+  # Reported (not auto-applied) before every training run — see
+  # ml/training/train_baseline.py. class_weight=balanced above is the
+  # applied strategy for the baseline; oversampling is NOT used by
+  # default per the brief's caution against blind oversampling.
+  # Real numbers (Phase 1, full data): Komati 50.0/50.0 — genuinely
+  # balanced, no correction needed. Dreaddit 52.3/47.7 — mild, balanced
+  # weighting is sufficient, no oversampling/threshold-tuning warranted.
+  report_before_training: true
+
+roberta:
+  dataset: "komati"   # "komati" or "dreaddit" — same meaning as baseline.dataset
+  # mental/mental-roberta-base: domain-pretrained on mental-health Reddit
+  # text (see Phase 0 research). CC-BY-NC-4.0 — non-commercial only; see
+  # README licensing note before any commercial use.
+  model_name_or_path: "mental/mental-roberta-base"
+  # 512 = RoBERTa's architectural max. Real token-length analysis
+  # (scripts/run_phase3_token_analysis.py) showed the p95 already
+  # exceeds this on Komati, so lowering it below 512 would truncate
+  # more without saving meaningful compute — see README Phase 3 section
+  # for the actual reported numbers once you've run the real analysis.
+  # Dynamic per-batch padding (DataCollatorWithPadding) means most
+  # batches are padded far shorter than this in practice — this is
+  # just the truncation ceiling, not the typical per-batch cost.
+  max_seq_length: 512
+  # Stratified subsample of the training set, class balance preserved.
+  # null = use the full real dataset. Set an integer (e.g. 20000) for a
+  # fast initial pass to validate the pipeline / estimate real training
+  # time before committing to a full run — see README Phase 3 section
+  # on how to use this and how to label a subsampled run's results.
+  max_train_samples: null
+  max_val_samples: null      # same idea, for faster eval checkpoints during a quick pass
+  max_test_samples: null     # same idea, for the final held-out evaluation
+  batch_size: 16
+  eval_batch_size: 32
+  learning_rate: 2.0e-5
+  num_epochs: 1
+  weight_decay: 0.01
+  warmup_ratio: 0.06
+  early_stopping_patience: 2       # stop if val macro-F1 doesn't improve for N eval rounds
+  eval_steps: 500                  # evaluate every N training steps (also controls checkpoint frequency) — auto-clamped down if a subsample makes this larger than total steps
+  logging_steps: 100
+  seed: 42
+  fp16: true                      # set true only if training on a CUDA GPU that supports it
+  output_dir: "models/roberta"
+  # Ablation: same pipeline, swap model_name_or_path to "roberta-base"
+  # (general-domain, no mental-health pretraining) to quantify how much
+  # the domain-adapted encoder actually buys you — see brief §16.

@@ -1,0 +1,20 @@
+# Data — never commit raw or processed data (sensitive, and large)
+datasets/raw/**
+!datasets/raw/**/.gitkeep
+datasets/processed/**
+!datasets/processed/**/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Models (added in later phases)
+models/**
+!models/.gitkeep
+
+# Env
+.env

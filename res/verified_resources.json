@@ -1,0 +1,52 @@
+[
+  {
+    "name": "Tele-MANAS",
+    "country": "India",
+    "country_code": "IN",
+    "type": "crisis_support",
+    "phone": "14416 or 1-800-891-4416",
+    "website": "https://telemanas.mohfw.gov.in/",
+    "availability": "24/7, 20 languages",
+    "source": "https://telemanas.mohfw.gov.in/"
+  },
+  {
+    "name": "iCALL Psychosocial Helpline",
+    "country": "India",
+    "country_code": "IN",
+    "type": "crisis_support",
+    "phone": "9152987821",
+    "website": "https://icallhelpline.org/",
+    "availability": "Mon\u2013Sat, phone/email/chat",
+    "source": "https://icallhelpline.org/"
+  },
+  {
+    "name": "988 Suicide & Crisis Lifeline",
+    "country": "USA",
+    "country_code": "US",
+    "type": "crisis_support",
+    "phone": "988",
+    "website": "https://988lifeline.org/",
+    "availability": "24/7",
+    "source": "https://988lifeline.org/"
+  },
+  {
+    "name": "Samaritans",
+    "country": "UK & Ireland",
+    "country_code": "GB",
+    "type": "crisis_support",
+    "phone": "116 123",
+    "website": "https://www.samaritans.org/",
+    "availability": "24/7",
+    "source": "https://www.samaritans.org/"
+  },
+  {
+    "name": "Findahelpline",
+    "country": "International",
+    "country_code": "INTL",
+    "type": "directory",
+    "phone": null,
+    "website": "https://findahelpline.com/",
+    "availability": "Location-based lookup of vetted local helplines",
+    "source": "https://findahelpline.com/"
+  }
+]

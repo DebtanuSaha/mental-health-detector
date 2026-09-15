@@ -1,0 +1,35 @@
+# Dataset configuration for Phase 1 (dataset exploration).
+# Keep paths/column names here, not hard-coded in ml/data/*.py.
+
+komati:
+  name: "suicide-watch"
+  description: "Komati 'Suicide and Depression Detection' Kaggle dataset"
+  raw_path: "datasets/raw/komati/suicide_detection.csv"
+  text_column: "text"
+  label_column: "class"
+  # Raw label values as they appear in the CSV -> normalized binary int label
+  label_map:
+    suicide: 1
+    non-suicide: 0
+  positive_label_name: "suicide"
+  negative_label_name: "non-suicide"
+
+dreaddit:
+  name: "dreaddit"
+  description: "Dreaddit stress-analysis dataset (Turcan & McKeown, 2019)"
+  raw_path_train: "datasets/raw/dreaddit/dreaddit-train.csv"
+  raw_path_test: "datasets/raw/dreaddit/dreaddit-test.csv"
+  text_column: "text"
+  label_column: "label"
+  # Dreaddit's label column is already 0/1 (0 = no stress, 1 = stress)
+  positive_label_name: "stress"
+  negative_label_name: "no_stress"
+
+processed_dir: "datasets/processed"
+
+# Columns beyond text/label that should never be printed/logged in full
+# (Dreaddit ships 100+ LIWC linguistic features per row alongside the raw text)
+sample_inspection:
+  n_samples_per_class: 5
+  max_chars_preview: 240
+  random_seed: 42

@@ -1,0 +1,22 @@
+# Video ingestion configuration.
+
+ingestion:
+  # Frames-per-second to sample for facial-expression analysis. 1.0 is
+  # usually enough to catch expression trends without the compute cost
+  # of processing every frame — raise it if you specifically need finer
+  # temporal resolution.
+  frame_fps: 1.0
+  # Whisper expects 16kHz mono audio — don't change this unless you're
+  # also changing the ASR model.
+  audio_sample_rate: 16000
+  # Safety cap against accidentally processing a very long video.
+  # Raise explicitly (in code or here) if you have a real use case for
+  # longer input.
+  max_duration_seconds: 600.0
+
+# Privacy: extracted audio/frames are written to a fresh OS temp
+# directory per video and deleted immediately after processing (see
+# ml/video/ingestion.py cleanup_ingestion() / ingest_video_ctx()) —
+# never persisted, per the project's no-raw-data-storage stance,
+# extended here from text to video/frame data (biometric — a bigger
+# privacy step up than text).

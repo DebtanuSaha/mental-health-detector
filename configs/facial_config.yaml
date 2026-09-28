@@ -1,0 +1,32 @@
+# Facial emotion analysis configuration (live capture only, for now).
+
+facial_emotion:
+  enable: true
+
+  # DeepFace's face-detector backend. 'opencv' is the fastest and most
+  # CPU-friendly — measured ~0.4-0.5s per call on a CPU-only machine
+  # during development. 'mtcnn' or 'retinaface' are more accurate but
+  # noticeably slower — only switch if opencv's detections look too
+  # unreliable on your webcam.
+  detector_backend: "opencv"
+
+  # How often (wall-clock seconds) to run DeepFace during live capture.
+  # Real measured cost is ~0.4-0.5s/call on CPU, so 1.0s leaves enough
+  # headroom for the preview window to stay responsive between
+  # analyses. Lower this only if your machine is fast enough to keep up
+  # — going too low will make the live preview stutter.
+  analysis_interval_seconds: 1.0
+
+  # DeepFace still returns a "face detected" result even on frames with
+  # NO real face (verified empirically) — it falls back to using the
+  # whole frame, with face_confidence=0.0. Readings below this
+  # threshold are treated as "no face in frame", not a real emotion
+  # reading. 0.5 is a reasonable starting cutoff — tune based on your
+  # camera/lighting if you see false "no face" results.
+  min_face_confidence: 0.5
+
+# Per the project's established stance on secondary signals (same as
+# sentiment): facial emotion is reported in the final result alongside
+# the risk assessment, but is NOT mathematically fused into the
+# numeric crisis/distress risk_score — see
+# ml/facial/emotion_analyzer.py's module docstring for the reasoning.

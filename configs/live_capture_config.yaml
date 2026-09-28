@@ -1,0 +1,19 @@
+# Live webcam + microphone capture configuration.
+
+live_capture:
+  camera_index: 0          # 0 = default/first camera; try 1, 2... if you have multiple
+  mic_device_index: null   # null = system default microphone; see scripts/list_audio_devices.py to find others
+  fps: 20
+  frame_width: 640
+  frame_height: 480
+  audio_sample_rate: 16000  # matches Whisper's expected input rate — don't change without also changing transcription
+  audio_channels: 1
+  audio_chunk_size: 1024
+  max_duration_seconds: 120.0   # auto-stop safety cap even if the quit key is never pressed
+  window_title: "Recording - press Q to stop"
+  quit_key: "q"
+
+# Privacy: the recording is written to a temp directory and deleted
+# immediately after processing (see ml/video/live_capture.py
+# cleanup_live_capture() / live_capture_ctx()) — never persisted,
+# same stance as uploaded-video ingestion.
